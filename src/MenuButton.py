@@ -58,6 +58,12 @@ class MenuButton(GameObject):
 
     def update(self):
         """Auto-update called from game loop. Returns self.return_state when clicked, otherwise None."""
+        # Ensure rect is synced with position before checking collision
+        try:
+            self.rect.topleft = (int(self.position[0]), int(self.position[1]))
+        except Exception:
+            pass
+        
         mouse_pos = pygame.mouse.get_pos()
         mouse_pressed = pygame.mouse.get_pressed()[0]
         current_time = pygame.time.get_ticks()

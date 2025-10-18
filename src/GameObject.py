@@ -28,5 +28,8 @@ class GameObject():
     def setPosition(self, position):
         self.position = position
 
+    def handle_event(self, event):
+        pass
+
     def render(self, screen):
         pass

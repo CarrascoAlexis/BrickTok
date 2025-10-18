@@ -38,22 +38,3 @@ class SettingsMenu(Menu):
         self.add_object(self.sound_button)
         self.add_object(self.diff_button)
         self.add_object(self.back_button)
-
-    def render(self, screen):
-        # Layout buttons similarly to MainMenu (centered vertically)
-        try:
-            buttons = [self.fps_button, self.sound_button, self.diff_button, self.back_button]
-            bw, bh = buttons[0].rect.size
-            sw, sh = screen.get_width(), screen.get_height()
-
-            total_height = len(buttons) * bh + (len(buttons) - 1) * 16
-            start_y = (sh - total_height) // 2
-
-            for idx, btn in enumerate(buttons):
-                x = (sw - bw) // 2
-                y = start_y + idx * (bh + 16)
-                btn.setPosition((x, y))
-        except Exception:
-            pass
-
-        super().render(screen)

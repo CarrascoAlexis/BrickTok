@@ -81,3 +81,20 @@ class Menu(Scene):
 
         # Handle mouse input through Scene.update
         return super().update()
+
+    def render(self, screen):
+        """Layout buttons vertically centered"""
+        buttons = list(filter(lambda obj: isinstance(obj, MenuButton), self.renderable_objects))
+        if not buttons:
+            return super().render(screen)
+        bw, bh = buttons[0].rect.size
+        sw, sh = screen.get_width(), screen.get_height()
+
+        total_height = len(buttons) * bh + (len(buttons) - 1) * 16
+        start_y = (sh - total_height) // 2
+
+        for idx, btn in enumerate(buttons):
+            x = (sw - bw) // 2
+            y = start_y + idx * (bh + 16)
+            btn.setPosition((x, y))
+        super().render(screen)

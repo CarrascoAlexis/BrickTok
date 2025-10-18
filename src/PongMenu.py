@@ -2,7 +2,10 @@
 
 Created on 2025-10-17
 
-
+Pong game menu scene.
+- Player count selection
+- AI difficulty selection
+- Start button to begin game
 
 """
 __author__ = "carras_a"
@@ -15,12 +18,13 @@ from .MenuButton import MenuButton
 
 class PongMenu(Menu):
     def __init__(self):
+        """Initialize the Pong game menu."""
         super().__init__()
 
         # Internal state
         self.player_counts = [1, 2]
         self.player_index = 0  # default 1 players
-        self.difficulties = ["Easy", "Normal", "Hard"]
+        self.difficulties = ["Easy", "Medium", "Hard"]
         self.diff_index = 1
 
         # Buttons
@@ -34,21 +38,3 @@ class PongMenu(Menu):
         self.add_object(self.ai_button)
         self.add_object(self.start_button)
         self.add_object(self.back_button)
-
-    def render(self, screen):
-        try:
-            buttons = [self.players_button, self.ai_button, self.start_button, self.back_button]
-            bw, bh = buttons[0].rect.size
-            sw, sh = screen.get_width(), screen.get_height()
-
-            total_height = len(buttons) * bh + (len(buttons) - 1) * 16
-            start_y = (sh - total_height) // 2
-
-            for idx, btn in enumerate(buttons):
-                x = (sw - bw) // 2
-                y = start_y + idx * (bh + 16)
-                btn.setPosition((x, y))
-        except Exception:
-            pass
-
-        super().render(screen)

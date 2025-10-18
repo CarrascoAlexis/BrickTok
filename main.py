@@ -66,13 +66,9 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game.stop()
-            # Allow exiting fullscreen with ESC during development
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                # Toggle fullscreen/windowed
-                set_display_mode(not fullscreen)
             # Toggle FPS overlay with F3
             if event.type == pygame.KEYDOWN and event.key == pygame.K_F3:
-                game.show_fps = not getattr(game, 'show_fps', False)
+                game.toggle_fps_display()
 
         game.update()
         game.render()
