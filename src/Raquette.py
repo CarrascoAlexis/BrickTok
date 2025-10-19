@@ -16,17 +16,20 @@ from .GameObject import GameObject
 class Raquette(GameObject):
     # AI Difficulty levels with (speed, reaction_zone, error_margin)
     DIFFICULTY_EASY = {"speed": 200, "reaction_zone": 0.5, "error_margin": 50}
-    DIFFICULTY_MEDIUM = {"speed": 350, "reaction_zone": 0.7, "error_margin": 20}
+    DIFFICULTY_MEDIUM = {
+        "speed": 350,
+        "reaction_zone": 0.7,
+        "error_margin": 20}
     DIFFICULTY_HARD = {"speed": 500, "reaction_zone": 0.9, "error_margin": 5}
-    
-    def __init__(self, type = "PONG_IA", difficulty="MEDIUM"):
+
+    def __init__(self, type="PONG_IA", difficulty="MEDIUM"):
         super().__init__()
 
         self.input_type = type
         self.is_ai = False
         self.ball_ref = None  # Reference to the ball for AI tracking
         self.ai_difficulty = difficulty
-        
+
         # Determine game mode from type
         if type.startswith("PONG_"):
             self.game_mode = "PONG"
@@ -53,21 +56,24 @@ class Raquette(GameObject):
                 else:
                     self.ai_params = self.DIFFICULTY_MEDIUM
             case "BRICK_P1":
-                self.keys = [pygame.K_a, pygame.K_d]  # A/D for brick breaker P1
+                # A/D for brick breaker P1
+                self.keys = [pygame.K_a, pygame.K_d]
             case "BRICK_P2":
-                self.keys = [pygame.K_LEFT, pygame.K_RIGHT]  # Arrows for brick breaker P2
+                # Arrows for brick breaker P2
+                self.keys = [pygame.K_LEFT, pygame.K_RIGHT]
             case _:
                 self.keys = []
 
         try:
-            self.original = pygame.image.load(r"assets/images/Raquette.png").convert_alpha()
-        except Exception as e: 
+            self.original = pygame.image.load(
+                r"assets/images/Raquette.png").convert_alpha()
+        except Exception as e:
 
             # If image can't be loaded, create a placeholder surface
             print(f"Warning: could not load button image: {e}")
             self.original = pygame.Surface((200, 50), pygame.SRCALPHA)
             self.original.fill((100, 100, 100, 255))
-        
+
         # Desired scale factor and rotation
         self.scale = 0.1  # scale down to 50%
 
@@ -90,7 +96,7 @@ class Raquette(GameObject):
         if screen:
             sw, sh = screen.get_size()
             margin = 20
-            
+
             if self.game_mode == "PONG":
                 # Pong mode: vertical positioning, left or right side
                 if self.input_type == "PONG_P1":
@@ -102,7 +108,7 @@ class Raquette(GameObject):
                 # Brick Breaker mode: horizontal positioning, bottom of screen
                 x = (sw - self.rect.width) // 2  # Centered horizontally
                 y = sh - self.rect.height - margin  # At bottom
-            
+
             self.setPosition((x, y))
             self.rect.topleft = (int(x), int(y))
         else:
@@ -126,42 +132,44 @@ class Raquette(GameObject):
 
     def ai_update_position(self, dt):
         """AI logic to track and follow the ball.
-        
+
         Args:
             dt: Delta time in seconds
         """
         if not self.ball_ref:
             return
-        
+
         # Get AI parameters
         speed = self.ai_params["speed"]
         reaction_zone = self.ai_params["reaction_zone"]
         error_margin = self.ai_params["error_margin"]
-        
+
         # Only react if ball is in our reaction zone
         screen = pygame.display.get_surface()
         if not screen:
             return
-            
+
         sw, sh = screen.get_size()
         ball_x = self.ball_ref.rect.centerx
-        
+
         # Determine which side we're on and if ball is coming towards us
         is_right_side = self.rect.centerx > sw / 2
-        ball_moving_towards_us = (is_right_side and self.ball_ref.velocity[0] > 0) or \
-                                 (not is_right_side and self.ball_ref.velocity[0] < 0)
-        
+        ball_moving_towards_us = (
+            is_right_side and self.ball_ref.velocity[0] > 0) or (
+            not is_right_side and self.ball_ref.velocity[0] < 0)
+
         # Calculate reaction threshold based on difficulty
         reaction_threshold = sw * reaction_zone
         should_react = False
-        
+
         if is_right_side:
             # Right side AI reacts when ball crosses threshold from left
-            should_react = ball_x > (sw - reaction_threshold) and ball_moving_towards_us
+            should_react = ball_x > (
+                sw - reaction_threshold) and ball_moving_towards_us
         else:
             # Left side AI reacts when ball crosses threshold from left
             should_react = ball_x < reaction_threshold and ball_moving_towards_us
-        
+
         if not should_react:
             # Return to center when not actively tracking
             target_y = sh / 2
@@ -172,28 +180,28 @@ class Raquette(GameObject):
             import random
             if error_margin > 0:
                 target_y += random.randint(-error_margin, error_margin)
-        
+
         # Calculate current position
         x, y = self.position
         old_y = y
         paddle_center_y = y + self.rect.height / 2
-        
+
         # Move towards target
         diff = target_y - paddle_center_y
-        
+
         # Dead zone to prevent jittering
         if abs(diff) > 5:
             if diff < 0:
                 y -= speed * dt
             else:
                 y += speed * dt
-        
+
         # Clamp to screen bounds
         y = max(0, min(y, sh - self.rect.height))
-        
+
         # Calculate velocity (pixels per second)
         self.velocity_y = (y - old_y) / dt if dt > 0 else 0
-        
+
         # Update position
         self.setPosition((x, y))
         self.rect.topleft = (int(x), int(y))
@@ -203,7 +211,7 @@ class Raquette(GameObject):
 
         For PONG: Uses arrow keys or W/S to move up/down, clamped to screen height.
         For BRICK: Uses A/D or arrow keys to move left/right, clamped to screen width.
-        
+
         Args:
             dt: Delta time in seconds
         """
@@ -220,7 +228,7 @@ class Raquette(GameObject):
                 if screen:
                     sw, sh = screen.get_size()
                     margin = 20
-                    
+
                     if self.game_mode == "PONG":
                         if self.input_type == "PONG_P1":
                             x = margin  # P1 on left side
@@ -228,9 +236,10 @@ class Raquette(GameObject):
                             x = sw - self.rect.width - margin  # P2/IA on right side
                         y = (sh - self.rect.height) // 2
                     elif self.game_mode == "BRICK":
-                        x = (sw - self.rect.width) // 2  # Centered horizontally
+                        # Centered horizontally
+                        x = (sw - self.rect.width) // 2
                         y = sh - self.rect.height - margin  # At bottom
-                    
+
                     self.setPosition((x, y))
                     self.rect.topleft = (int(x), int(y))
                     self._pending_place = False
@@ -302,7 +311,7 @@ class Raquette(GameObject):
         else:
             self.updatePosition(dt)
         return None
-    
+
     def render(self, screen):
         # Draw the transformed raquette at its position (top-left)
         try:

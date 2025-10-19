@@ -13,8 +13,14 @@ __version__ = "1.0"
 import pygame
 from src.game import Game
 
+
 def main():
-    """Main function to run the game."""
+    """Initialize and run the main game loop.
+
+    This function initializes pygame, sets up the display with fullscreen mode,
+    creates the game instance, and runs the main game loop handling events,
+    updates, and rendering.
+    """
     pygame.init()
     # Try to get the desktop resolution reliably
     sizes = pygame.display.get_desktop_sizes()
@@ -25,8 +31,12 @@ def main():
     fullscreen = True
     windowed_size = (800, 600)
 
-    # Use fullscreen with hardware acceleration flags when available
     def set_display_mode(fullscreen_mode: bool):
+        """Set the display mode to fullscreen or windowed.
+
+        Args:
+            fullscreen_mode (bool): True for fullscreen, False for windowed.
+        """
         nonlocal fullscreen, screen
         fullscreen = bool(fullscreen_mode)
         flags = pygame.HWSURFACE | pygame.DOUBLEBUF
@@ -73,6 +83,7 @@ def main():
         clock.tick(fps)
 
     pygame.quit()
+
 
 if __name__ == "__main__":
     main()

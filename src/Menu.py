@@ -25,7 +25,7 @@ class Menu(Scene):
         self.last_key_time = pygame.time.get_ticks()
         self.key_delay = 150  # ms between nav events
         self.using_keyboard = False  # Track if keyboard was last input
-    
+
     def cleanup(self):
         """Clear selection state when menu is exited"""
         buttons = self.get_menu_buttons()
@@ -34,18 +34,21 @@ class Menu(Scene):
 
     def get_menu_buttons(self):
         # Return the list of MenuButton instances in renderable_objects
-        return [obj for obj in self.renderable_objects if isinstance(obj, MenuButton)]
+        return [
+            obj for obj in self.renderable_objects if isinstance(
+                obj, MenuButton)]
 
     def update(self):
         # Handle keyboard navigation and selection
         now = pygame.time.get_ticks()
         buttons = self.get_menu_buttons()
-        
+
         if not buttons:
             return super().update()
 
         # Ensure valid selection index
-        self.selected_index = max(0, min(self.selected_index, len(buttons) - 1))
+        self.selected_index = max(
+            0, min(self.selected_index, len(buttons) - 1))
 
         # Check if mouse moved
         rel = pygame.mouse.get_rel()
@@ -88,23 +91,30 @@ class Menu(Scene):
     def render(self, screen):
         """Render title and layout buttons vertically centered"""
         sw, sh = screen.get_width(), screen.get_height()
-        
+
         if not self.title_font:
             try:
-                self.title_font = pygame.font.Font("assets/fonts/Vanilla Pancake.ttf", 80)
+                self.title_font = pygame.font.Font(
+                    "assets/fonts/Vanilla Pancake.ttf", 80)
             except Exception:
                 self.title_font = pygame.font.Font(None, 80)
-        
-        title_surface = self.title_font.render(self.title, True, (255, 255, 255))
+
+        title_surface = self.title_font.render(
+            self.title, True, (255, 255, 255))
         title_rect = title_surface.get_rect(center=(sw // 2, 100))
         screen.blit(title_surface, title_rect)
         title_height = 150  # Reserve space for title
-        
+
         # Layout buttons vertically centered (below title)
-        buttons = list(filter(lambda obj: isinstance(obj, MenuButton), self.renderable_objects))
+        buttons = list(
+            filter(
+                lambda obj: isinstance(
+                    obj,
+                    MenuButton),
+                self.renderable_objects))
         if not buttons:
             return super().render(screen)
-        
+
         bw, bh = buttons[0].rect.size
         total_height = len(buttons) * bh + (len(buttons) - 1) * 16
         start_y = ((sh - title_height) - total_height) // 2 + title_height
@@ -113,5 +123,5 @@ class Menu(Scene):
             x = (sw - bw) // 2
             y = start_y + idx * (bh + 16)
             btn.setPosition((x, y))
-        
+
         super().render(screen)

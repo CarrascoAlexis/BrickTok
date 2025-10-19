@@ -2,7 +2,9 @@
 
 Created on 2025-10-17
 
-Ball class for both Pong and Brick Breaker games. Handles movement and collision.
+Ball class for both Pong and Brick Breaker games.
+Handles movement and collision.
+
 """
 __author__ = "carras_a"
 __version__ = "1.0"
@@ -16,78 +18,116 @@ from .SoundManager import SoundManager
 
 
 class Ball(GameObject):
-    def __init__(self, game_mode="PONG"):
+    """Ball game object for both Pong and Brick Breaker games.
+
+    This class handles ball physics, movement, collisions with paddles,
+    bricks, and walls. It supports two game modes with different behaviors.
+
+    Attributes:
+        game_mode (str): "PONG" or "BRICK" game mode.
+        sound_manager (SoundManager): Handles sound effects.
+        scored_left (bool): True if ball went off left edge (Pong).
+        scored_right (bool): True if ball went off right edge (Pong).
+        scored_bottom (bool): True if ball fell off bottom (Brick Breaker).
+        speed (int): Ball speed in pixels per second.
+        velocity (list): Ball velocity [vx, vy] in pixels per second.
+        waiting (bool): True if waiting for spacebar to launch.
+        last_bounce_time (int): Time of last bounce in milliseconds.
+        bounce_cooldown (int): Minimum time between bounces in milliseconds.
+    """
+
+    def __init__(self, game_mode="PONG", has_to_wait=True):
+        """Initialize the ball.
+
+        Args:
+            game_mode (str): "PONG" or "BRICK" to determine physics behavior.
+            has_to_wait (bool): If True, ball waits for spacebar to launch.
+        """
         super().__init__()
-        
+
         # Game mode: "PONG" or "BRICK"
         self.game_mode = game_mode
-        
+
         # Sound manager
         self.sound_manager = SoundManager()
-        
+
         # Scoring flags
         self.scored_left = False
         self.scored_right = False
         self.scored_bottom = False  # For brick breaker
-        
+
         # Load and scale ball sprite
         self.load_sprite()
-        
+
         # Movement
         self.rect = self.background.get_rect()
         self.speed = 400  # pixels per second
         self.velocity = [0, 0]  # [vx, vy]
         self.waiting = True  # Wait for spacebar to start
-        
+
         # Collision cooldown
         self.last_bounce_time = 0
         self.bounce_cooldown = 100  # milliseconds
-        
+
         # Delta time tracking
         self.last_time = pygame.time.get_ticks()
-        
+
         # Initial position
         self.reset()
-    
+        self.waiting = has_to_wait
+
     def load_sprite(self):
-        """Load and scale the ball sprite."""
+        """Load and scale the ball sprite from assets.
+
+        Loads Ball.png from assets/images and scales it to 50% of original
+        size. If the image cannot be loaded, creates a white circle as
+        fallback.
+        """
         try:
-            original = pygame.image.load(r"assets/images/Ball.png").convert_alpha()
+            original = pygame.image.load(
+                r"assets/images/Ball.png").convert_alpha()
         except Exception:
             # Create white circle fallback
             size = 20
             original = pygame.Surface((size, size), pygame.SRCALPHA)
-            pygame.draw.circle(original, (255, 255, 255), (size//2, size//2), size//2)
-        
+            pygame.draw.circle(original, (255, 255, 255),
+                               (size // 2, size // 2), size // 2)
+
         # Scale to 50%
         w = max(1, int(original.get_width() * 0.5))
         h = max(1, int(original.get_height() * 0.5))
         self.background = pygame.transform.smoothscale(original, (w, h))
 
     def reset(self):
-        """Reset ball to center with random direction."""
+        """Reset ball to center position with random initial direction.
+
+        Clears all scoring flags and sets waiting mode. Ball position
+        depends on game mode: centered for Pong, lower position for
+        Brick Breaker. Initial velocity angle is randomized.
+        """
         self.scored_left = False
         self.scored_right = False
         self.scored_bottom = False
         self.waiting = True
-        
+
         # Center on screen
         screen = pygame.display.get_surface()
         if screen:
             sw, sh = screen.get_size()
             x = (sw - self.rect.width) // 2
-            
+
             # Different starting positions based on game mode
             if self.game_mode == "BRICK":
-                y = sh - 150  # Start lower for brick breaker
+                # Start lower for brick breaker (closer to paddle)
+                y = sh - 100
             else:
                 y = (sh - self.rect.height) // 2  # Center for pong
         else:
             x, y = 400, 300  # Fallback
-        
+
         self.setPosition((x, y))
         self.rect.topleft = (x, y)
-        
+
         # Set initial velocity based on game mode
         if self.game_mode == "BRICK":
             # Brick breaker: launch upward with random angle
@@ -97,7 +137,7 @@ class Ball(GameObject):
             angle = random.uniform(-45, 45)
             if random.random() < 0.5:
                 angle += 180
-        
+
         # Set velocity
         rad = math.radians(angle)
         self.velocity = [
@@ -106,78 +146,105 @@ class Ball(GameObject):
         ]
 
     def handle_event(self):
-        """Handle spacebar to start ball movement."""
+        """Handle keyboard input to start ball movement.
+
+        Checks for spacebar press and disables waiting mode when pressed,
+        allowing the ball to start moving.
+        """
         if pygame.key.get_pressed()[pygame.K_SPACE]:
             self.waiting = False
-    
+
     def bounce_paddle(self, raquette):
-        """Bounce off paddle - behavior depends on game mode."""
+        """Handle ball collision and bounce off paddle.
+
+        Behavior differs by game mode:
+        - Pong: Reverses horizontal direction, adds paddle vertical velocity
+        - Brick Breaker: Reverses vertical direction, adds paddle horizontal
+          velocity
+
+        Uses cooldown to prevent multiple rapid bounces. Plays paddle hit
+        sound effect.
+
+        Args:
+            raquette (Raquette): The paddle object that was hit.
+        """
         # Cooldown check
         now = pygame.time.get_ticks()
         if now - self.last_bounce_time < self.bounce_cooldown:
             return
         self.last_bounce_time = now
-        
+
         if self.game_mode == "PONG":
             # Pong: reverse horizontal direction
             self.velocity[0] = -self.velocity[0]
-            
+
             # Add paddle's vertical velocity (50% influence)
             if hasattr(raquette, 'velocity_y'):
                 self.velocity[1] += raquette.velocity_y * 0.5
-            
+
             # Position ball outside paddle
             if self.velocity[0] > 0:
                 self.rect.left = raquette.rect.right
             else:
                 self.rect.right = raquette.rect.left
-        
+
         elif self.game_mode == "BRICK":
             # Brick breaker: reverse vertical direction (bounce up)
             self.velocity[1] = -abs(self.velocity[1])  # Always bounce upward
-            
+
             # Add paddle's horizontal velocity influence for angle control
             if hasattr(raquette, 'velocity_x'):
                 # In brick breaker, paddle moves horizontally
                 self.velocity[0] += raquette.velocity_x * 0.5
-            
+
             # Position ball on top of paddle
             self.rect.bottom = raquette.rect.top
-        
+
         self.setPosition(self.rect.topleft)
-        
+
         # Sound effect
         self.sound_manager.play("paddle_hit", 0.5)
 
     def bounce_brick(self, brick):
-        """Bounce off a brick - direction depends on which side was hit.
-        
+        """Handle ball collision and bounce off a brick.
+
+        Calculates which side of the brick was hit by comparing overlap
+        distances on all four sides. Bounces ball in appropriate direction
+        (horizontal for left/right hits, vertical for top/bottom hits).
+
+        Uses cooldown to prevent multiple rapid bounces. Plays wall hit
+        sound effect.
+
         Args:
-            brick: The brick object that was hit (must have a rect attribute)
+            brick: The brick object that was hit (must have rect attribute).
         """
         # Cooldown check to prevent multiple bounces
         now = pygame.time.get_ticks()
         if now - self.last_bounce_time < self.bounce_cooldown:
             return
         self.last_bounce_time = now
-        
+
         # Calculate overlap on each side to determine which side was hit
         ball_rect = self.rect
         brick_rect = brick.rect
-        
+
         # Calculate how much the ball overlaps the brick on each side
         overlap_left = ball_rect.right - brick_rect.left
         overlap_right = brick_rect.right - ball_rect.left
         overlap_top = ball_rect.bottom - brick_rect.top
         overlap_bottom = brick_rect.bottom - ball_rect.top
-        
+
         # Find the smallest overlap to determine collision side
-        min_overlap = min(overlap_left, overlap_right, overlap_top, overlap_bottom)
-        
+        min_overlap = min(
+            overlap_left,
+            overlap_right,
+            overlap_top,
+            overlap_bottom)
+
         if min_overlap == overlap_left or min_overlap == overlap_right:
             # Hit left or right side - reverse horizontal velocity
             self.velocity[0] = -self.velocity[0]
-            
+
             # Position ball outside brick
             if min_overlap == overlap_left:
                 self.rect.right = brick_rect.left
@@ -186,43 +253,53 @@ class Ball(GameObject):
         else:
             # Hit top or bottom side - reverse vertical velocity
             self.velocity[1] = -self.velocity[1]
-            
+
             # Position ball outside brick
             if min_overlap == overlap_top:
                 self.rect.bottom = brick_rect.top
             else:
                 self.rect.top = brick_rect.bottom
-        
+
         self.setPosition(self.rect.topleft)
-        
+
         # Sound effect
         self.sound_manager.play("wall_hit", 0.4)
 
     def update(self):
-        """Update ball position and handle collisions."""
+        """Update ball position and handle wall collisions.
+
+        Handles waiting state, calculates delta time for smooth movement,
+        moves ball based on velocity, and handles collisions with screen
+        boundaries. Behavior differs by game mode:
+        - Pong: Scores when ball goes off left/right edges
+        - Brick Breaker: Bounces off left/right, scores when falls off bottom
+
+        Returns:
+            str or None: "SCORE" if a scoring event occurred, None otherwise.
+        """
         # Check for spacebar press
-        
+
         if self.waiting:
             self.handle_event()
             return None
-        
+
         # Calculate delta time
         now = pygame.time.get_ticks()
         dt = (now - self.last_time) / 1000.0
         dt = min(dt, 0.5)  # Cap at 0.5s to avoid huge jumps
         self.last_time = now
-        
+
         # Move ball
         x, y = self.position
         x += self.velocity[0] * dt
         y += self.velocity[1] * dt
-        
+
         # Get screen dimensions
         screen = pygame.display.get_surface()
         if not screen:
             return None
         sw, sh = screen.get_size()
-        
+
         # Vertical wall bounces (top/bottom)
         if y < 0:
             y = 0
@@ -239,7 +316,7 @@ class Ball(GameObject):
                 y = sh - self.rect.height
                 self.velocity[1] = -abs(self.velocity[1])
                 self.sound_manager.play("wall_hit", 0.3)
-        
+
         # Horizontal bounds
         if self.game_mode == "PONG":
             # Pong: scoring on left/right
@@ -259,24 +336,34 @@ class Ball(GameObject):
                 x = sw - self.rect.width
                 self.velocity[0] = -abs(self.velocity[0])
                 self.sound_manager.play("wall_hit", 0.3)
-        
+
         # Update position
         self.setPosition((x, y))
         self.rect.topleft = (int(x), int(y))
-        
+
         return None
 
     def render(self, screen):
-        """Draw the ball."""
+        """Render the ball and waiting prompt to the screen.
+
+        Draws the ball sprite at its current position. If in waiting mode,
+        also displays "PRESS SPACE" text above the ball.
+
+        Args:
+            screen (pygame.Surface): The surface to render to.
+
+        Returns:
+            The result of the parent class render method.
+        """
         screen.blit(self.background, self.position)
-        
+
         # Show "PRESS SPACE" text when waiting
         if self.waiting:
             font = pygame.font.Font(None, 36)
             text = font.render("PRESS SPACE", True, (255, 255, 255))
             text_rect = text.get_rect(
-                center=(screen.get_width() // 2, screen.get_height() // 2 + 50)
+                center=(screen.get_width() // 2, self.position[1] - 30)
             )
             screen.blit(text, text_rect)
-        
+
         return super().render(screen)

@@ -23,7 +23,8 @@ class Scene:
                                   "PLAY_PONG",
                                   "PLAY_BRICK",
                                   "PLAY_BRICK_GAME",
-                                  "START_PONG"]
+                                  "START_PONG",
+                                  "NEXT_LEVEL"]
         pass
 
     def render(self, screen):

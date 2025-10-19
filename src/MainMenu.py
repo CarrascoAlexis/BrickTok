@@ -14,6 +14,7 @@ import pygame
 from .Menu import Menu
 from .MenuButton import MenuButton
 
+
 class MainMenu(Menu):
     def __init__(self):
         super().__init__(title="BRICKTOK")

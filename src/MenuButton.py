@@ -27,7 +27,8 @@ class MenuButton(GameObject):
 
         # Load a random background image (safe fallback)
         try:
-            self.background = pygame.image.load(f"assets/images/Button_0{random.randint(1, 3)}.png").convert_alpha()
+            self.background = pygame.image.load(
+                f"assets/images/Button_0{random.randint(1, 3)}.png").convert_alpha()
         except Exception as e:
             # If image can't be loaded, create a placeholder surface
             print(f"Warning: could not load button image: {e}")
@@ -40,7 +41,8 @@ class MenuButton(GameObject):
         # Load font from assets (Vanilla Pancake). Size based on button height.
         font_size = max(12, int(self.rect.height * 0.5))
         try:
-            self.font = pygame.font.Font("assets/fonts/Vanilla Pancake.ttf", font_size)
+            self.font = pygame.font.Font(
+                "assets/fonts/Vanilla Pancake.ttf", font_size)
         except Exception:
             # Fallback to default font if custom font can't be loaded
             self.font = pygame.font.Font(None, font_size)
@@ -68,7 +70,7 @@ class MenuButton(GameObject):
             self.rect.topleft = (int(self.position[0]), int(self.position[1]))
         except Exception:
             pass
-        
+
         mouse_pos = pygame.mouse.get_pos()
         mouse_pressed = pygame.mouse.get_pressed()[0]
         current_time = pygame.time.get_ticks()
@@ -118,17 +120,22 @@ class MenuButton(GameObject):
                         text_color = (0, 100, 200)  # Lighter blue for hover
                     else:
                         text_color = (0, 0, 0)  # Black for normal state
-                    
-                    text_surface = self.font.render(self.text, True, text_color)
-                except Exception:
-                    fallback_font = pygame.font.Font(None, max(12, int(self.rect.height * 0.5)))
-                    text_surface = fallback_font.render(self.text, True, (255, 255, 255))
 
-                text_rect = text_surface.get_rect(center=(self.rect.centerx, self.rect.centery))
+                    text_surface = self.font.render(
+                        self.text, True, text_color)
+                except Exception:
+                    fallback_font = pygame.font.Font(
+                        None, max(12, int(self.rect.height * 0.5)))
+                    text_surface = fallback_font.render(
+                        self.text, True, (255, 255, 255))
+
+                text_rect = text_surface.get_rect(
+                    center=(self.rect.centerx, self.rect.centery))
                 # shadow (slightly darker version of text color)
                 try:
                     shadow_color = tuple(max(0, c - 50) for c in text_color)
-                    shadow_surf = self.font.render(self.text, True, shadow_color)
+                    shadow_surf = self.font.render(
+                        self.text, True, shadow_color)
                     shadow_rect = text_rect.copy()
                     shadow_rect.x += 2
                     shadow_rect.y += 2
@@ -140,7 +147,8 @@ class MenuButton(GameObject):
             # Fallback to original draw if scaling fails
             screen.blit(self.background, self.rect)
             if getattr(self, 'text', None):
-                text_surface = self.font.render(self.text, True, (255, 255, 255))
+                text_surface = self.font.render(
+                    self.text, True, (255, 255, 255))
                 text_rect = text_surface.get_rect(center=self.rect.center)
                 screen.blit(text_surface, text_rect)
 

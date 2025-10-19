@@ -22,14 +22,17 @@ class SettingsMenu(Menu):
 
         # Internal settings state
         self.fps_options = [30, 60, 120, 240]
-        self.fps_index = self.fps_options.index(settings[0]) if settings else 1 
+        self.fps_index = self.fps_options.index(settings[0]) if settings else 1
         self.sound_on = settings[1] if settings else True
         self.difficulties = ["Easy", "Normal", "Hard"]
         self.diff_index = 1
 
         # Buttons
-        self.fps_button = MenuButton("FPS", f"FPS: {self.fps_options[self.fps_index]}")
-        self.sound_button = MenuButton("SOUND", f"Sound: {'ON' if self.sound_on else 'OFF'}")
+        self.fps_button = MenuButton(
+            "FPS", f"FPS: {self.fps_options[self.fps_index]}")
+        self.sound_button = MenuButton(
+            "SOUND", f"Sound: {
+                'ON' if self.sound_on else 'OFF'}")
         self.back_button = MenuButton("MAIN_MENU", "Back")
 
         # Add to scene in order
@@ -41,12 +44,13 @@ class SettingsMenu(Menu):
         """Update button labels and handle cycling on click."""
         # Update button labels
         self.fps_button.set_label(f"FPS: {self.fps_options[self.fps_index]}")
-        self.sound_button.set_label(f"Sound: {'ON' if self.sound_on else 'OFF'}")
-        
+        self.sound_button.set_label(
+            f"Sound: {'ON' if self.sound_on else 'OFF'}")
+
         # Check for button clicks before calling super().update()
         # This allows us to intercept the click and cycle the value
         result = None
-        
+
         # Check FPS button click
         if self.fps_button.update() == "FPS":
             # Cycle to next FPS option
