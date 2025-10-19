@@ -17,18 +17,10 @@ def main():
     """Main function to run the game."""
     pygame.init()
     # Try to get the desktop resolution reliably
-    try:
-        # Prefer get_desktop_sizes() when available (pygame 2.0+), fall back to display.Info()
-        if hasattr(pygame.display, 'get_desktop_sizes'):
-            sizes = pygame.display.get_desktop_sizes()
-            # get_desktop_sizes returns a list of (w,h) tuples; use first/primary
-            width, height = sizes[0]
-        else:
-            info = pygame.display.Info()
-            width, height = info.current_w, info.current_h
-    except Exception:
-        # Fallback to a reasonable default
-        width, height = 800, 600
+    sizes = pygame.display.get_desktop_sizes()
+    # get_desktop_sizes returns a list of (w,h) tuples; use first/primary
+    width, height = sizes[0]
+
     # Track fullscreen state and windowed size
     fullscreen = True
     windowed_size = (800, 600)

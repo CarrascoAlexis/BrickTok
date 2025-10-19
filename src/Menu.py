@@ -15,8 +15,11 @@ from .MenuButton import MenuButton
 
 
 class Menu(Scene):
-    def __init__(self):
+    def __init__(self, title=""):
         super().__init__()
+        # Menu title
+        self.title = title
+        self.title_font = None
         # Keyboard navigation
         self.selected_index = 0
         self.last_key_time = pygame.time.get_ticks()
@@ -83,18 +86,32 @@ class Menu(Scene):
         return super().update()
 
     def render(self, screen):
-        """Layout buttons vertically centered"""
+        """Render title and layout buttons vertically centered"""
+        sw, sh = screen.get_width(), screen.get_height()
+        
+        if not self.title_font:
+            try:
+                self.title_font = pygame.font.Font("assets/fonts/Vanilla Pancake.ttf", 80)
+            except Exception:
+                self.title_font = pygame.font.Font(None, 80)
+        
+        title_surface = self.title_font.render(self.title, True, (255, 255, 255))
+        title_rect = title_surface.get_rect(center=(sw // 2, 100))
+        screen.blit(title_surface, title_rect)
+        title_height = 150  # Reserve space for title
+        
+        # Layout buttons vertically centered (below title)
         buttons = list(filter(lambda obj: isinstance(obj, MenuButton), self.renderable_objects))
         if not buttons:
             return super().render(screen)
+        
         bw, bh = buttons[0].rect.size
-        sw, sh = screen.get_width(), screen.get_height()
-
         total_height = len(buttons) * bh + (len(buttons) - 1) * 16
-        start_y = (sh - total_height) // 2
+        start_y = ((sh - title_height) - total_height) // 2 + title_height
 
         for idx, btn in enumerate(buttons):
             x = (sw - bw) // 2
             y = start_y + idx * (bh + 16)
             btn.setPosition((x, y))
+        
         super().render(screen)

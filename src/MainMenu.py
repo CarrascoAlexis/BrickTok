@@ -16,7 +16,7 @@ from .MenuButton import MenuButton
 
 class MainMenu(Menu):
     def __init__(self):
-        super().__init__()
+        super().__init__(title="BRICKTOK")
         # Create the main menu buttons
         self.play_pong_button = MenuButton("PLAY_PONG", "Pong")
         self.play_brick_button = MenuButton("PLAY_BRICK", "Brick Breaker")

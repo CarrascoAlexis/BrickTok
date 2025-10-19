@@ -65,8 +65,8 @@ class ScoreScreen(Scene):
         screen.fill((20, 20, 40))
         
         # Render winner text
-        winner_text = f"PLAYER {self.winner[1]} WINS!"  # Extract number from "P1" or "P2"
-        winner_color = (255, 215, 0) if self.winner == "P1" else (255, 100, 100)
+        winner_text = f"PLAYER {self.winner[1]} WINS!"  # Extract number from "PONG_P1" or "PONG_P2"
+        winner_color = (255, 215, 0) if self.winner == "PONG_P1" else (255, 100, 100)
         winner_surface = self.title_font.render(winner_text, True, winner_color)
         winner_rect = winner_surface.get_rect(center=(self.screen_width // 2, 150))
         screen.blit(winner_surface, winner_rect)

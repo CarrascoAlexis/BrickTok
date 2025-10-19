@@ -19,31 +19,45 @@ class Raquette(GameObject):
     DIFFICULTY_MEDIUM = {"speed": 350, "reaction_zone": 0.7, "error_margin": 20}
     DIFFICULTY_HARD = {"speed": 500, "reaction_zone": 0.9, "error_margin": 5}
     
-    def __init__(self, type = "IA", difficulty="MEDIUM"):
+    def __init__(self, type = "PONG_IA", difficulty="MEDIUM"):
         super().__init__()
 
         self.input_type = type
         self.is_ai = False
         self.ball_ref = None  # Reference to the ball for AI tracking
         self.ai_difficulty = difficulty
+        
+        # Determine game mode from type
+        if type.startswith("PONG_"):
+            self.game_mode = "PONG"
+            self.movement_axis = "vertical"  # Up/down for pong
+        elif type.startswith("BRICK_"):
+            self.game_mode = "BRICK"
+            self.movement_axis = "horizontal"  # Left/right for brick breaker
+        else:
+            self.game_mode = "PONG"
+            self.movement_axis = "vertical"
 
         match type:
-            case "P1":
+            case "PONG_P2":
                 self.keys = [pygame.K_UP, pygame.K_DOWN]
-
-            case "P2":
+            case "PONG_P1":
                 self.keys = [pygame.K_w, pygame.K_s]
-
-            case "IA":
+            case "PONG_IA":
                 self.keys = []
                 self.is_ai = True
-                # Set AI parameters based on difficulty
                 if difficulty == "EASY":
                     self.ai_params = self.DIFFICULTY_EASY
                 elif difficulty == "HARD":
                     self.ai_params = self.DIFFICULTY_HARD
-                else:  # MEDIUM (default)
+                else:
                     self.ai_params = self.DIFFICULTY_MEDIUM
+            case "BRICK_P1":
+                self.keys = [pygame.K_a, pygame.K_d]  # A/D for brick breaker P1
+            case "BRICK_P2":
+                self.keys = [pygame.K_LEFT, pygame.K_RIGHT]  # Arrows for brick breaker P2
+            case _:
+                self.keys = []
 
         try:
             self.original = pygame.image.load(r"assets/images/Raquette.png").convert_alpha()
@@ -56,37 +70,43 @@ class Raquette(GameObject):
         
         # Desired scale factor and rotation
         self.scale = 0.1  # scale down to 50%
-        self.rotation = 90  # rotate 90 degrees clockwise
 
         # Create transformed image and rect
-        try:
-            w = max(1, int(self.original.get_width() * self.scale))
-            h = max(1, int(self.original.get_height() * self.scale))
-            scaled = pygame.transform.smoothscale(self.original, (w, h))
-            self.background = pygame.transform.rotate(scaled, self.rotation)
-        except Exception:
-            # Fallback: use original if transforms fail
-            self.background = self.original
+
+        if self.game_mode == "PONG":
+            self.rotation = 90  # rotate 90 degrees clockwise
+        else:
+            self.rotation = 0
+
+        w = max(1, int(self.original.get_width() * self.scale))
+        h = max(1, int(self.original.get_height() * self.scale))
+        scaled = pygame.transform.smoothscale(self.original, (w, h))
+        self.background = pygame.transform.rotate(scaled, self.rotation)
 
         self.rect = self.background.get_rect()
-        # Try to place the raquette depending on input type (P1 -> right side)
+        # Try to place the raquette depending on game mode and input type
         self._pending_place = False
-        try:
-            screen = pygame.display.get_surface()
-            if screen:
-                sw, sh = screen.get_size()
-                margin = 20
-                if self.input_type == "P1":
-                    x = sw - self.rect.width - margin
+        screen = pygame.display.get_surface()
+        if screen:
+            sw, sh = screen.get_size()
+            margin = 20
+            
+            if self.game_mode == "PONG":
+                # Pong mode: vertical positioning, left or right side
+                if self.input_type == "PONG_P1":
+                    x = margin  # P1 on left side
                 else:
-                    x = margin
+                    x = sw - self.rect.width - margin  # P2/IA on right side
                 y = (sh - self.rect.height) // 2
-                self.setPosition((x, y))
-                self.rect.topleft = (int(x), int(y))
-            else:
-                # No surface yet; mark pending and will place on first update
-                self._pending_place = True
-        except Exception:
+            elif self.game_mode == "BRICK":
+                # Brick Breaker mode: horizontal positioning, bottom of screen
+                x = (sw - self.rect.width) // 2  # Centered horizontally
+                y = sh - self.rect.height - margin  # At bottom
+            
+            self.setPosition((x, y))
+            self.rect.topleft = (int(x), int(y))
+        else:
+            # No surface yet; mark pending and will place on first update
             self._pending_place = True
 
         # Movement speed in pixels per second (will be scaled by delta time)
@@ -97,7 +117,8 @@ class Raquette(GameObject):
         # Time tracking for delta-time
         self._last_time = pygame.time.get_ticks()
         # Track paddle velocity for ball bounce calculations
-        self.velocity_y = 0  # Current vertical velocity
+        self.velocity_y = 0  # Current vertical velocity (for pong)
+        self.velocity_x = 0  # Current horizontal velocity (for brick breaker)
 
     def set_ball(self, ball):
         """Set the ball reference for AI tracking."""
@@ -178,9 +199,10 @@ class Raquette(GameObject):
         self.rect.topleft = (int(x), int(y))
 
     def updatePosition(self, dt):
-        """Handle keyboard input to move the raquette up and down.
+        """Handle keyboard input to move the raquette.
 
-        Uses arrow keys or W/S. Clamps the raquette to the current display surface.
+        For PONG: Uses arrow keys or W/S to move up/down, clamped to screen height.
+        For BRICK: Uses A/D or arrow keys to move left/right, clamped to screen width.
         
         Args:
             dt: Delta time in seconds
@@ -198,11 +220,17 @@ class Raquette(GameObject):
                 if screen:
                     sw, sh = screen.get_size()
                     margin = 20
-                    if self.input_type == "P1":
-                        x = sw - self.rect.width - margin
-                    else:
-                        x = margin
-                    y = (sh - self.rect.height) // 2
+                    
+                    if self.game_mode == "PONG":
+                        if self.input_type == "PONG_P1":
+                            x = margin  # P1 on left side
+                        else:
+                            x = sw - self.rect.width - margin  # P2/IA on right side
+                        y = (sh - self.rect.height) // 2
+                    elif self.game_mode == "BRICK":
+                        x = (sw - self.rect.width) // 2  # Centered horizontally
+                        y = sh - self.rect.height - margin  # At bottom
+                    
                     self.setPosition((x, y))
                     self.rect.topleft = (int(x), int(y))
                     self._pending_place = False
@@ -210,6 +238,7 @@ class Raquette(GameObject):
                 pass
 
         x, y = self.position
+        old_x = x
         old_y = y
         # Default to current rect top-left if position wasn't set
         try:
@@ -219,23 +248,36 @@ class Raquette(GameObject):
             x, y = self.rect.topleft
 
         if keys:
-            if keys[self.keys[0]]:
-                y -= int(self.speed * dt)
-            if keys[self.keys[1]]:
-                y += int(self.speed * dt)
+            if self.movement_axis == "vertical":
+                # Pong mode: up/down movement
+                if keys[self.keys[0]]:
+                    y -= int(self.speed * dt)
+                if keys[self.keys[1]]:
+                    y += int(self.speed * dt)
+            elif self.movement_axis == "horizontal":
+                # Brick Breaker mode: left/right movement
+                if keys[self.keys[0]]:
+                    x -= int(self.speed * dt)
+                if keys[self.keys[1]]:
+                    x += int(self.speed * dt)
 
         # Clamp to screen bounds if a display surface exists
         try:
             screen = pygame.display.get_surface()
             if screen:
                 sw, sh = screen.get_size()
-                # Ensure the raquette stays within vertical bounds
-                y = max(0, min(y, sh - self.rect.height))
+                if self.movement_axis == "vertical":
+                    # Ensure the raquette stays within vertical bounds
+                    y = max(0, min(y, sh - self.rect.height))
+                elif self.movement_axis == "horizontal":
+                    # Ensure the raquette stays within horizontal bounds
+                    x = max(0, min(x, sw - self.rect.width))
         except Exception:
             pass
 
         # Calculate velocity (pixels per second)
         self.velocity_y = (y - old_y) / dt if dt > 0 else 0
+        self.velocity_x = (x - old_x) / dt if dt > 0 else 0
 
         # Apply updated position and keep rect in sync
         self.setPosition((x, y))

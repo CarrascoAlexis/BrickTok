@@ -20,24 +20,19 @@ class PongLevel(Scene):
         super().__init__()
         self.paused = False
         self.num_players = players
-        self.ai_difficulty = difficulty.upper()
         
         # Create paddles and position them
         screen_width = pygame.display.get_surface().get_width()
         screen_height = pygame.display.get_surface().get_height()
         
         # Left paddle - always player 1
-        self.p1 = Raquette("P1")
-        self.p1.rect.x = 50  # Fixed x position from left
-        self.p1.rect.y = (screen_height - self.p1.rect.height) // 2
+        self.p1 = Raquette("PONG_P1")
         
         # Right paddle - player 2 or AI depending on player count
         if players == 2:
-            self.p2 = Raquette("P2")
+            self.p2 = Raquette("PONG_P2")
         else:
-            self.p2 = Raquette("IA", difficulty=self.ai_difficulty)
-        self.p2.rect.x = screen_width - 50 - self.p2.rect.width  # Fixed x position from right
-        self.p2.rect.y = (screen_height - self.p2.rect.height) // 2
+            self.p2 = Raquette("PONG_IA", difficulty.upper())
         
         # Create and position ball
         self.ball = Ball()
@@ -62,18 +57,18 @@ class PongLevel(Scene):
         self.add_object(self.p1)
         self.add_object(self.p2)
         self.add_object(self.ball)
-        self.add_object(self.score_display)  # Draw score last (foreground)
+        self.add_object(self.score_display)
 
-    def handle_event(self, event):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                return "MAIN_MENU"
-            elif event.key == pygame.K_p:
-                self.paused = not self.paused
+    # def handle_event(self, event):
+    #     if event.type == pygame.KEYDOWN:
+    #         if event.key == pygame.K_ESCAPE:
+    #             return "MAIN_MENU"
+    #         elif event.key == pygame.K_p:
+    #             self.paused = not self.paused
         
-        # Only pass events to objects if not paused
-        if not self.paused:
-            super().handle_event(event)
+    #     # Only pass events to objects if not paused
+    #     if not self.paused:
+    #         super().handle_event(event)
     
     def update(self):
         # Handle pause state
@@ -101,13 +96,13 @@ class PongLevel(Scene):
             self.p2_score += 1
             # Check for winner
             if self.p2_score >= self.winning_score:
-                return ("SCORE_SCREEN", "P2", self.p1_score, self.p2_score)
+                return ("SCORE_SCREEN", "PONG_P2", self.p1_score, self.p2_score)
             self.ball.reset()
         elif self.ball.scored_right:
             self.p1_score += 1
             # Check for winner
             if self.p1_score >= self.winning_score:
-                return ("SCORE_SCREEN", "P1", self.p1_score, self.p2_score)
+                return ("SCORE_SCREEN", "PONG_P1", self.p1_score, self.p2_score)
             self.ball.reset()
         
         return None

@@ -9,6 +9,7 @@ __author__ = "carras_a"
 __version__ = "1.0"
 
 
+from .BrickBreakerLevel import BrickBreakerLevel
 import pygame
 
 from .MainMenu import MainMenu
@@ -19,6 +20,7 @@ from .Scene import Scene
 from .Menu import Menu
 from .PongLevel import PongLevel
 from .ScoreScreen import ScoreScreen
+from .GameOverScreen import GameOverScreen
 
 class Game:
     def __init__(self):
@@ -32,6 +34,7 @@ class Game:
         self.pong_players = 2
         self.pong_difficulty = "HARD"
         self.show_fps = False
+        self.is_sound_on = True
         self.clock = None
         pass
 
@@ -68,7 +71,7 @@ class Game:
         
         # Handle tuple results (for passing data between scenes)
         if isinstance(result, tuple):
-            # Case for SCORE_SCREEN
+            # Case for SCORE_SCREEN (Pong)
             if result[0] == "SCORE_SCREEN":
                 # result = ("SCORE_SCREEN", winner, p1_score, p2_score)
                 winner = result[1]
@@ -76,18 +79,13 @@ class Game:
                 p2_score = result[3]
                 self.scene = ScoreScreen(winner, p1_score, p2_score)
                 return None
-            
-        # Handle scene transitions
-        match result:
-            case "EXIT":
-                self.stop()
-            case "SETTINGS":
-                self.scene = SettingsMenu()
-            case "PLAY_PONG":
-                self.scene = PongMenu()
-            case "PLAY_BRICK":
-                self.scene = BrickMenu()
-            case "START_PONG":
+            # Case for GAME_OVER (Brick Breaker)
+            if result[0] == "GAME_OVER":
+                # result = ("GAME_OVER", score)
+                score = result[1]
+                self.scene = GameOverScreen(score)
+                return None
+            if result[0] == "START_PONG":
                 # Get settings from PongMenu if available
                 if isinstance(self.scene, PongMenu):
                     player_count = self.scene.player_counts[self.scene.player_index]
@@ -95,8 +93,30 @@ class Game:
                     self.pong_players = player_count
                     self.pong_difficulty = difficulty
                 self.scene = PongLevel(players=self.pong_players, difficulty=self.pong_difficulty)
+                return None
+            if result[0] == "START_BRICk":
+                # Get settings from PongMenu if available
+                if isinstance(self.scene, BrickMenu):
+                    player_count = self.scene.player_counts[self.scene.player_index]
+                self.scene = BrickBreakerLevel(players=player_count)
+                return None
+            
+        # Handle scene transitions
+        match result:
+            case "EXIT":
+                self.stop()
+            case "SETTINGS":
+                self.scene = SettingsMenu((self.fps_limit, self.is_sound_on))
+            case "PLAY_PONG":
+                self.scene = PongMenu()
+            case "PLAY_BRICK":
+                self.scene = BrickMenu()
+            case "PLAY_BRICK_GAME":
+                self.scene = BrickBreakerLevel()
             case "MAIN_MENU":
                 self.scene = MainMenu()
+            case "SOUND_TOGGLE":
+                self.is_sound_on = not self.is_sound_on
 
         # If the current scene is the SettingsMenu, apply FPS settings to the game
         if isinstance(self.scene, SettingsMenu):

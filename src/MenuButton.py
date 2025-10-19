@@ -56,6 +56,11 @@ class MenuButton(GameObject):
         self.target_scale = 1.0
         self.scale_speed = 0.18
 
+    def set_label(self, text):
+        """Set the button label text."""
+        self.text = text
+        return
+
     def update(self):
         """Auto-update called from game loop. Returns self.return_state when clicked, otherwise None."""
         # Ensure rect is synced with position before checking collision
