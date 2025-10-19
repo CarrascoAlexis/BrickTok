@@ -1,0 +1,14 @@
+# Level 1 - Easy Start
+# R = Red (1 hit, 10 pts)
+# O = Orange (1 hit, 10 pts)
+# Y = Yellow (1 hit, 10 pts)
+# G = Green (2 hits, 20 pts)
+# B = Blue (2 hits, 20 pts)
+# P = Purple (3 hits, 30 pts)
+# X = Gray (5 hits, 50 pts)
+# . or space = Empty
+
+RRRRRRRRRRRRRRRRRR
+OOOOOOOOOOOOOOOOOO
+YYYYYYYYYYYYYYYYYY
+RRRRRRRRRRRRRRRRRR

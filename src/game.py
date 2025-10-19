@@ -11,6 +11,7 @@ __version__ = "1.0"
 
 from .BrickBreakerLevel import BrickBreakerLevel
 import pygame
+import os
 
 from .MainMenu import MainMenu
 from .SettingsMenu import SettingsMenu
@@ -21,6 +22,7 @@ from .Menu import Menu
 from .PongLevel import PongLevel
 from .ScoreScreen import ScoreScreen
 from .GameOverScreen import GameOverScreen
+from .VictoryScreen import VictoryScreen
 
 class Game:
     def __init__(self):
@@ -33,6 +35,8 @@ class Game:
         # Store game settings
         self.pong_players = 2
         self.pong_difficulty = "HARD"
+        self.brick_current_level = 1
+        self.brick_score = 0
         self.show_fps = False
         self.is_sound_on = True
         self.clock = None
@@ -85,6 +89,20 @@ class Game:
                 score = result[1]
                 self.scene = GameOverScreen(score)
                 return None
+            # Case for LEVEL_COMPLETE (Brick Breaker)
+            if result[0] == "LEVEL_COMPLETE":
+                # result = ("LEVEL_COMPLETE", level_number, score)
+                level_number = result[1]
+                score = result[2]
+                self.brick_score = score
+                self.brick_current_level = level_number + 1
+                
+                # Check if next level exists
+                next_level_file = f"levels/level_{self.brick_current_level:03d}.txt"
+                has_next_level = os.path.exists(next_level_file)
+                
+                self.scene = VictoryScreen(level_number, score, has_next_level)
+                return None
             if result[0] == "START_PONG":
                 # Get settings from PongMenu if available
                 if isinstance(self.scene, PongMenu):
@@ -95,10 +113,13 @@ class Game:
                 self.scene = PongLevel(players=self.pong_players, difficulty=self.pong_difficulty)
                 return None
             if result[0] == "START_BRICk":
-                # Get settings from PongMenu if available
+                # Get settings from BrickMenu if available
                 if isinstance(self.scene, BrickMenu):
                     player_count = self.scene.player_counts[self.scene.player_index]
-                self.scene = BrickBreakerLevel(players=player_count)
+                # Reset to level 1 when starting new game
+                self.brick_current_level = 1
+                self.brick_score = 0
+                self.scene = BrickBreakerLevel(players=player_count, level_number=1)
                 return None
             
         # Handle scene transitions
@@ -112,8 +133,17 @@ class Game:
             case "PLAY_BRICK":
                 self.scene = BrickMenu()
             case "PLAY_BRICK_GAME":
-                self.scene = BrickBreakerLevel()
+                # Reset to level 1
+                self.brick_current_level = 1
+                self.brick_score = 0
+                self.scene = BrickBreakerLevel(players=1, level_number=1)
+            case "NEXT_LEVEL":
+                # Load next level with current score
+                self.scene = BrickBreakerLevel(players=1, level_number=self.brick_current_level)
             case "MAIN_MENU":
+                # Reset brick breaker progress when returning to menu
+                self.brick_current_level = 1
+                self.brick_score = 0
                 self.scene = MainMenu()
             case "SOUND_TOGGLE":
                 self.is_sound_on = not self.is_sound_on

@@ -1,0 +1,19 @@
+# Level 4 - Fortress
+
+XXXXXXXXXXXXXXXXXX
+X................X
+X.PPPPPPPPPPPPPP.X
+X.P............P.X
+X.P.GGGGGGGGGG.P.X
+X.P.G........G.P.X
+X.P.G.BBBBBB.G.P.X
+X.P.G.B....B.G.P.X
+X.P.G.B.YY.B.G.P.X
+X.P.G.B....B.G.P.X
+X.P.G.BBBBBB.G.P.X
+X.P.G........G.P.X
+X.P.GGGGGGGGGG.P.X
+X.P............P.X
+X.PPPPPPPPPPPPPP.X
+X................X
+XXXXXXXXXXXXXXXXXX

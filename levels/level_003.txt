@@ -1,0 +1,10 @@
+# Level 3 - Checkerboard Challenge
+
+R.O.Y.G.B.P.R.O.Y.
+.O.Y.G.B.P.R.O.Y.G
+Y.G.B.P.R.O.Y.G.B.
+.G.B.P.R.O.Y.G.B.P
+B.P.R.O.Y.G.B.P.R.
+.P.R.O.Y.G.B.P.R.O
+P.R.O.Y.G.B.P.R.O.
+.R.O.Y.G.B.P.R.O.Y
