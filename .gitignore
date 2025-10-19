@@ -15,6 +15,11 @@ __pycache__/
 build/
 dist/
 *.egg-info/
+*.spec
+
+# PyInstaller distribution files
+BrickTok_Distribution/
+BrickTok_v*.zip
 
 # IDE
 .vscode/
